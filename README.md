@@ -44,23 +44,23 @@ infer, generate a profile, serve it locally, and share it.
 ```mermaid
 flowchart LR
     subgraph Record["1. Record (while the cloud works)"]
-        D[Device] -->|own traffic| P[Studio: hotspot capture,<br/>router DNS, proxy mode<br/>or pcap import]
-        P -->|forwarded unchanged| V[(Vendor cloud)]
-        A[You, in the vendor app:<br/>&quot;turned on&quot;, &quot;set 22 C&quot;] -->|annotations| T[Studio timeline]
+        D["Device"] -->|"own traffic"| P["Studio: hotspot capture,<br/>router DNS, proxy mode<br/>or pcap import"]
+        P -->|"forwarded unchanged"| V[("Vendor cloud")]
+        A["You, in the vendor app:<br/>'turned on', 'set 22 C'"] -->|"annotations"| T["Studio timeline"]
     end
     subgraph Infer["2. Infer"]
-        P --> C[(Capture)]
+        P --> C[("Capture")]
         T --> C
-        C --> I[Sessions, protocols, endpoints,<br/>topics, auth, state model,<br/>framing and checksums]
-        I --> Pr[Device profile<br/>YAML + evidence]
+        C --> I["Sessions, protocols, endpoints,<br/>topics, auth, state model,<br/>framing and checksums"]
+        I --> Pr["Device profile<br/>YAML + evidence"]
     end
     subgraph Revive["3. Revive (after the cloud is gone)"]
-        Pr --> S[Modigliani Server:<br/>DNS, HTTP(S), WebSocket,<br/>MQTT, CoAP, raw TCP/UDP]
-        D2[Same device] <--> S
-        S <-->|MQTT discovery| HA[Home Assistant]
-        S <-->|REST API| HA
+        Pr --> S["Modigliani Server:<br/>DNS, HTTP(S), WebSocket,<br/>MQTT, CoAP, raw TCP/UDP"]
+        D2["Same device"] <--> S
+        S <-->|"MQTT discovery"| HA["Home Assistant"]
+        S <-->|"REST API"| HA
     end
-    Pr -->|scrub + sign| L[(Shared profile library)]
+    Pr -->|"scrub + sign"| L[("Shared profile library")]
 ```
 
 1. **Record.** Enroll the devices you own. Modigliani captures only their traffic, using the

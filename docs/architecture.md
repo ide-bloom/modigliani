@@ -82,11 +82,11 @@ sequenceDiagram
     participant HA as Home Assistant
     D->>S: POST /api/v1/auth/login (own credentials)
     S->>DB: issue token (profile's format and lifetime)
-    S-->>D: {"token": "<new>", "expires_in": 3600}
+    S-->>D: {"token": "#lt;new#gt;", "expires_in": 3600}
     D->>S: POST /devices/{serial}/status {"power": false}
     S->>DB: reported power=false
-    S-->>HA: modigliani/<slug>/state
-    HA->>S: modigliani/<slug>/set/power "ON"
+    S-->>HA: modigliani/#lt;slug#gt;/state
+    HA->>S: modigliani/#lt;slug#gt;/set/power "ON"
     S->>DB: desired power=true, queue set_power
     D->>S: GET /devices/{serial}/commands
     S-->>D: {"commands": [{"seq": 1, "action": "set_power", "power": true}]}
