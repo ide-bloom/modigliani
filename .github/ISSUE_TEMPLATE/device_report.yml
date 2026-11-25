@@ -1,0 +1,30 @@
+name: Device report
+description: Report a device you tried to revive, whether it worked or not.
+labels: [device]
+body:
+  - type: input
+    id: device
+    attributes:
+      label: Vendor and model
+    validations:
+      required: true
+  - type: dropdown
+    id: result
+    attributes:
+      label: Result of `modigliani infer`
+      options: [revivable, partial, not revivable without firmware access, inference failed]
+    validations:
+      required: true
+  - type: textarea
+    id: protocols
+    attributes:
+      label: Protocols and TLS behavior
+      description: The summary printed by `modigliani infer` (it contains no identifiers).
+      render: text
+  - type: checkboxes
+    id: ownership
+    attributes:
+      label: Scope
+      options:
+        - label: I own this device and recorded only its traffic on my own network.
+          required: true

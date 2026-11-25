@@ -1,0 +1,17 @@
+send_command:
+  fields:
+    device_id:
+      required: true
+      selector:
+        device:
+          integration: modigliani
+    variable:
+      required: true
+      example: power
+      selector:
+        text:
+    value:
+      required: true
+      example: true
+      selector:
+        object:

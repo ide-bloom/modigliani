@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Modigliani Server</title>
+<style>
+  :root { --bg:#fbfaf7; --fg:#1f1d1a; --muted:#6b665e; --line:#e3ded4; --ok:#2f6f4f; --bad:#9a3b26; }
+  @media (prefers-color-scheme: dark) { :root { --bg:#171614; --fg:#ece8e1; --muted:#a39d93; --line:#34312c; --ok:#7cc4a0; --bad:#e0866d; } }
+  body { margin:0; background:var(--bg); color:var(--fg); font:15px/1.5 system-ui, sans-serif; }
+  header, main { padding:16px 20px; max-width:1100px; }
+  header { border-bottom:1px solid var(--line); }
+  h1 { font-size:18px; margin:0; } h2 { font-size:15px; margin:24px 0 8px; }
+  table { width:100%; border-collapse:collapse; font-size:13px; }
+  td, th { text-align:left; padding:4px 6px; border-bottom:1px solid var(--line); vertical-align:top; }
+  .mono { font-family:ui-monospace, Consolas, monospace; }
+  .ok { color:var(--ok); } .bad { color:var(--bad); } .muted { color:var(--muted); }
+  input { padding:6px; border:1px solid var(--line); background:transparent; color:inherit; border-radius:6px; }
+</style>
+</head>
+<body>
+<header><h1>Modigliani Server</h1><span class="muted" id="status">enter the API token to view devices</span></header>
+<main>
+  <form id="login"><input id="token" type="password" placeholder="API token" autocomplete="current-password"> <button>Show</button></form>
+  <h2>Devices</h2><table><thead><tr><th>device</th><th>last seen</th><th>state</th></tr></thead><tbody id="devices"></tbody></table>
+  <h2>Unhandled requests <span class="muted">(feed these back into <code>modigliani infer</code> to improve the profile)</span></h2>
+  <table><thead><tr><th>time</th><th>protocol</th><th>from</th><th>request</th></tr></thead><tbody id="unhandled"></tbody></table>
+  <h2>Log</h2><table><tbody id="logs"></tbody></table>
+</main>
+<script>
+const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+let token = sessionStorage.getItem("modigliani-token") || "";
+document.getElementById("login").onsubmit = (e) => { e.preventDefault(); token = document.getElementById("token").value; sessionStorage.setItem("modigliani-token", token); refresh(); };
+async function api(path) {
+  const r = await fetch(path, {headers: {Authorization: "Bearer " + token}});
+  if (!r.ok) throw new Error(r.status);
+  return r.json();
+}
+async function refresh() {
+  if (!token) return;
+  try {
+    const [devs, unh, logs] = await Promise.all([api("/api/devices"), api("/api/unhandled?limit=50"), api("/api/logs")]);
+    document.getElementById("status").textContent = devs.length + " device(s)";
+    document.getElementById("devices").innerHTML = devs.map((d) => `<tr><td><b>${esc(d.name)}</b><br><span class="mono muted">${esc(d.id)}</span></td>
+      <td class="${d.online ? "ok" : "bad"}">${d.online ? "online" : "offline"}<br><span class="muted">${esc(new Date(d.last_seen).toLocaleString())}</span></td>
+      <td class="mono">${Object.entries(d.state).map(([k, v]) => esc(k) + " = " + esc(JSON.stringify(v))).join("<br>")}</td></tr>`).join("");
+    document.getElementById("unhandled").innerHTML = (unh || []).map((u) => `<tr><td>${esc(new Date(u.ts).toLocaleTimeString())}</td><td>${esc(u.protocol)}</td><td class="mono">${esc(u.remote)}</td><td class="mono">${esc(u.summary)}</td></tr>`).join("");
+    document.getElementById("logs").innerHTML = logs.slice(-100).reverse().map((l) => `<tr><td class="mono muted">${esc(new Date(l.time).toLocaleTimeString())}</td><td>${esc(l.level)}</td><td>${esc(l.message)} <span class="mono muted">${esc(Object.entries(l.attrs).map(([k, v]) => k + "=" + v).join(" "))}</span></td></tr>`).join("");
+  } catch (e) { document.getElementById("status").textContent = "API error " + e.message + " (wrong token?)"; }
+}
+refresh(); setInterval(refresh, 5000);
+</script>
+</body>
+</html>

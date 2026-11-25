@@ -1,0 +1,7 @@
+{
+  "name": "Modigliani",
+  "zip_release": true,
+  "filename": "modigliani-homeassistant.zip",
+  "render_readme": true,
+  "homeassistant": "2026.10.0"
+}

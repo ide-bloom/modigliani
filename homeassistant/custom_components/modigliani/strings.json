@@ -1,0 +1,53 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Connect to Modigliani Server",
+        "description": "Enter the address of your Modigliani Server's local API and its API token.",
+        "data": {
+          "url": "Server URL",
+          "token": "API token"
+        },
+        "data_description": {
+          "url": "For example http://192.168.1.10:8080",
+          "token": "The value of api.token in the server configuration, or the api-token file in its data directory"
+        }
+      },
+      "reauth_confirm": {
+        "title": "Re-authenticate with Modigliani Server",
+        "description": "The API token was rejected. Enter the current token.",
+        "data": {
+          "token": "API token"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "Could not reach the server.",
+      "invalid_auth": "The API token was rejected."
+    },
+    "abort": {
+      "already_configured": "This server is already configured.",
+      "reauth_successful": "Re-authentication was successful."
+    }
+  },
+  "services": {
+    "send_command": {
+      "name": "Send command",
+      "description": "Send a command to a revived device through Modigliani Server.",
+      "fields": {
+        "device_id": {
+          "name": "Device",
+          "description": "The device to command."
+        },
+        "variable": {
+          "name": "Variable",
+          "description": "The state variable to change, for example power or setpoint."
+        },
+        "value": {
+          "name": "Value",
+          "description": "The new value."
+        }
+      }
+    }
+  }
+}

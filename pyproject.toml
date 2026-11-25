@@ -1,0 +1,118 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "modigliani"
+version = "0.1.0"
+description = "Keep smart devices working after their vendor's cloud shuts down."
+readme = "README.md"
+license = "Apache-2.0"
+license-files = ["LICENSE"]
+requires-python = ">=3.12"
+authors = [{ name = "Modigliani contributors" }]
+keywords = ["home-assistant", "iot", "reverse-engineering", "interoperability", "right-to-repair"]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Environment :: Console",
+    "Intended Audience :: End Users/Desktop",
+    "Operating System :: Microsoft :: Windows",
+    "Operating System :: POSIX :: Linux",
+    "Programming Language :: Python :: 3",
+    "Topic :: Home Automation",
+    "Typing :: Typed",
+]
+dependencies = [
+    "aiocoap>=0.4.17",
+    "cryptography>=50.0.2",
+    "dnslib>=0.9.26",
+    "fastapi>=0.165.0",
+    "genson>=1.4.0",
+    "jinja2>=3.1.6",
+    "jsonschema>=4.26.0",
+    "mitmproxy>=12.3.1",
+    "paho-mqtt>=2.2.0",
+    "pydantic>=2.14.4",
+    "pyyaml>=6.0.4",
+    "rich>=15.0.0",
+    "scapy>=2.8.0",
+    "typer>=0.29.2",
+    "uvicorn>=0.54.0",
+]
+
+[project.urls]
+Homepage = "https://github.com/ide-bloom/modigliani"
+Issues = "https://github.com/ide-bloom/modigliani/issues"
+Changelog = "https://github.com/ide-bloom/modigliani/blob/main/CHANGELOG.md"
+
+[project.scripts]
+modigliani = "modigliani.cli:main"
+
+[tool.hatch.build.targets.wheel]
+packages = ["studio/src/modigliani"]
+
+[tool.hatch.build.targets.sdist]
+include = ["studio/src", "README.md", "LICENSE", "CHANGELOG.md"]
+
+[dependency-groups]
+build = [
+    "pyinstaller>=6.22.3",
+]
+dev = [
+    "httpx>=0.28.1",
+    "mypy>=2.4.1",
+    "pip-audit>=2.10.1",
+    "pytest>=9.2.0",
+    "pytest-timeout>=2.4.0",
+    "ruff>=0.17.6",
+    "types-jsonschema>=4.26.0.20261006",
+    "types-pyyaml>=6.0.12.20261122",
+]
+
+[tool.ruff]
+line-length = 120
+target-version = "py312"
+src = ["studio/src", "tests"]
+extend-exclude = ["packaging/*.spec"]
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "B", "UP", "SIM", "RUF", "BLE", "C4", "PIE", "PT"]
+ignore = ["E501", "RUF001", "RUF002", "RUF003", "SIM108", "SIM102", "SIM401", "B008"]
+
+[tool.ruff.lint.per-file-ignores]
+# Compound assertions read better in end-to-end checks than a dozen one-liners.
+"tests/**" = ["PT018"]
+"homeassistant/tests/**" = ["PT018"]
+
+[tool.ruff.lint.isort]
+known-first-party = ["modigliani", "custom_components"]
+
+[tool.mypy]
+strict = true
+python_version = "3.12"
+mypy_path = "studio/src"
+packages = ["modigliani"]
+warn_unreachable = true
+
+[[tool.mypy.overrides]]
+module = ["scapy.*", "dnslib.*", "genson.*", "aiocoap.*", "mitmproxy.*"]
+ignore_missing_imports = true
+
+# mitmproxy ships partial annotations; its untyped helpers are called only from the proxy recorder.
+[[tool.mypy.overrides]]
+module = ["modigliani.capture.proxy"]
+disallow_untyped_calls = false
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+timeout = 300
+addopts = "-ra"
+markers = [
+    "e2e: end-to-end tests that record, infer and replace a vendor cloud (needs the Go server binary)",
+]
+
+[tool.uv]
+# mitmproxy 12.3.1 pins tornado<=6.5.10, which has published advisories (pip-audit). Tornado is
+# only used by mitmproxy's web UI (mitmweb), which Modigliani never starts; proxy mode embeds
+# DumpMaster. Overriding keeps pip-audit clean; the end-to-end suite exercises proxy mode.
+override-dependencies = ["tornado>=6.6.1"]

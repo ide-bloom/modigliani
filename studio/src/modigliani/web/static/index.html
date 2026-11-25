@@ -1,0 +1,108 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Modigliani Studio</title>
+<style>
+  :root { --bg:#fbfaf7; --fg:#1f1d1a; --muted:#6b665e; --line:#e3ded4; --accent:#9a3b26; --up:#2f6f4f; --down:#2d4f8a; }
+  @media (prefers-color-scheme: dark) { :root { --bg:#171614; --fg:#ece8e1; --muted:#a39d93; --line:#34312c; --accent:#e0866d; --up:#7cc4a0; --down:#8fb0ea; } }
+  * { box-sizing: border-box; }
+  body { margin:0; font:15px/1.5 system-ui, sans-serif; background:var(--bg); color:var(--fg); }
+  header { padding:16px 20px; border-bottom:1px solid var(--line); display:flex; gap:16px; align-items:baseline; flex-wrap:wrap; }
+  header h1 { margin:0; font-size:18px; letter-spacing:.02em; }
+  nav button { background:none; border:0; color:var(--muted); font:inherit; padding:4px 8px; cursor:pointer; }
+  nav button.active { color:var(--fg); border-bottom:2px solid var(--accent); }
+  main { padding:16px 20px; max-width:1100px; }
+  section { display:none; } section.active { display:block; }
+  .row { display:flex; gap:8px; flex-wrap:wrap; margin-bottom:12px; }
+  input[type=text] { flex:1; min-width:220px; padding:8px; border:1px solid var(--line); background:transparent; color:inherit; border-radius:6px; }
+  button.primary { background:var(--accent); color:#fff; border:0; border-radius:6px; padding:8px 14px; cursor:pointer; }
+  table { width:100%; border-collapse:collapse; font-size:13px; }
+  td, th { text-align:left; padding:4px 6px; border-bottom:1px solid var(--line); vertical-align:top; }
+  td.mono, pre, textarea { font-family:ui-monospace, Consolas, monospace; }
+  .up { color:var(--up); } .down { color:var(--down); } .ann { background:color-mix(in srgb, var(--accent) 12%, transparent); }
+  textarea { width:100%; min-height:60vh; background:transparent; color:inherit; border:1px solid var(--line); border-radius:6px; padding:8px; font-size:13px; }
+  .errors { color:var(--accent); white-space:pre-wrap; }
+  .muted { color:var(--muted); }
+  del { color:var(--accent); } ins { color:var(--up); text-decoration:none; }
+</style>
+</head>
+<body>
+<header>
+  <h1>Modigliani Studio</h1>
+  <span class="muted" id="context"></span>
+  <nav>
+    <button data-tab="timeline" class="active">Timeline</button>
+    <button data-tab="profile">Profile</button>
+    <button data-tab="scrub">Share (scrub diff)</button>
+  </nav>
+</header>
+<main>
+  <section id="timeline" class="active">
+    <p class="muted">Each time you do something in the vendor's phone app, describe it here right away:
+      <em>turned on</em>, <em>set 22 C</em>, <em>mode cool</em>, <em>app shows temperature 21.5 C</em>.</p>
+    <div class="row">
+      <input type="text" id="label" placeholder="What did you just do in the app?" autofocus>
+      <button class="primary" id="mark">Mark now</button>
+    </div>
+    <table><thead><tr><th>time</th><th></th><th>what</th></tr></thead><tbody id="events"></tbody></table>
+  </section>
+  <section id="profile">
+    <div class="row"><button class="primary" id="save">Validate &amp; save</button><span class="muted" id="saveStatus"></span></div>
+    <div class="errors" id="profileErrors"></div>
+    <textarea id="profileText" spellcheck="false"></textarea>
+  </section>
+  <section id="scrub">
+    <p class="muted">Everything below is replaced before a profile is shared. Run
+      <code>modigliani export &lt;profile&gt; --share</code> to confirm and sign.</p>
+    <table><thead><tr><th>where</th><th>before / after</th><th>why</th></tr></thead><tbody id="changes"></tbody></table>
+  </section>
+</main>
+<script>
+const $ = (id) => document.getElementById(id);
+const fmt = (ts) => new Date(ts * 1000).toLocaleTimeString();
+const esc = (s) => String(s).replace(/[&<>]/g, (c) => ({"&":"&amp;","<":"&lt;",">":"&gt;"}[c]));
+document.querySelectorAll("nav button").forEach((b) => b.onclick = () => {
+  document.querySelectorAll("nav button, section").forEach((e) => e.classList.remove("active"));
+  b.classList.add("active"); $(b.dataset.tab).classList.add("active");
+  if (b.dataset.tab === "profile") loadProfile();
+  if (b.dataset.tab === "scrub") loadScrub();
+});
+async function json(url, opts) { const r = await fetch(url, opts); if (!r.ok) throw new Error(await r.text()); return r.json(); }
+async function refresh() {
+  const st = await json("/api/state");
+  $("context").textContent = [st.capture && "capture " + st.capture, st.profile && "profile " + st.profile].filter(Boolean).join(" · ");
+  let events = [], anns = [];
+  try { events = await json("/api/timeline"); } catch (e) {}
+  try { anns = await json("/api/annotations"); } catch (e) {}
+  const rows = events.map((e) => ({ts: e.ts, html: `<td class="mono">${fmt(e.ts)}</td><td class="${e.dir}">${e.dir === "up" ? "▲" : "▼"} ${e.protocol}</td><td class="mono">${esc(e.summary)}</td>`}))
+    .concat(anns.map((a, i) => ({ts: a.ts, cls: "ann", html: `<td class="mono">${fmt(a.ts)}</td><td>✎ you</td><td>${esc(a.label)} <span class="muted">${a.variable ? esc(a.variable) + " = " : ""}${esc(a.value ?? "")}</span> <button data-del="${i}">remove</button></td>`})));
+  rows.sort((a, b) => b.ts - a.ts);
+  $("events").innerHTML = rows.slice(0, 500).map((r) => `<tr class="${r.cls || ""}">${r.html}</tr>`).join("");
+  document.querySelectorAll("[data-del]").forEach((b) => b.onclick = async () => { await fetch("/api/annotations/" + b.dataset.del, {method: "DELETE"}); refresh(); });
+}
+$("mark").onclick = async () => {
+  const label = $("label").value.trim(); if (!label) return;
+  await json("/api/annotations", {method: "POST", headers: {"Content-Type": "application/json"}, body: JSON.stringify({label, ts: Date.now() / 1000})});
+  $("label").value = ""; refresh();
+};
+$("label").addEventListener("keydown", (e) => { if (e.key === "Enter") $("mark").click(); });
+async function loadProfile() {
+  try { const p = await json("/api/profile"); $("profileText").value = p.text; $("profileErrors").textContent = p.errors.join("\n"); }
+  catch (e) { $("profileErrors").textContent = "No profile selected (start Studio with `modigliani review <profile>`)."; }
+}
+$("save").onclick = async () => {
+  const r = await json("/api/profile", {method: "PUT", headers: {"Content-Type": "application/json"}, body: JSON.stringify({text: $("profileText").value})});
+  $("saveStatus").textContent = r.saved ? "saved" : "not saved"; $("profileErrors").textContent = r.errors.join("\n");
+};
+async function loadScrub() {
+  try {
+    const s = await json("/api/profile/scrub");
+    $("changes").innerHTML = s.changes.map((c) => `<tr><td class="mono">${esc(c.path)}</td><td class="mono"><del>${esc(c.before)}</del><br><ins>${esc(c.after)}</ins></td><td>${esc(c.reason)}</td></tr>`).join("");
+  } catch (e) { $("changes").innerHTML = "<tr><td colspan=3>No profile selected.</td></tr>"; }
+}
+refresh(); setInterval(refresh, 3000);
+</script>
+</body>
+</html>

@@ -1,0 +1,48 @@
+# Modigliani Server configuration. Every key is optional; see docs/server.md.
+# Start with: modigliani-server --profiles profiles/local --config config.yaml
+
+data_dir: modigliani-data        # SQLite state store and the generated API token
+ca_dir: ca                       # created by `modigliani ca init` (DPAPI-protected on Windows)
+# profiles: [profiles/local]     # also settable with --profiles (repeatable)
+
+api:
+  listen: 127.0.0.1:8080         # local REST/WebSocket API and status page
+  # token: ...                   # default: generated once into <data_dir>/api-token
+
+# Listeners. Omit a section to use defaults for the protocols your profiles need
+# (HTTP :80/:443, MQTT :1883/:8883, CoAP :5683). A section that is present is used as written.
+http:
+  listen: [":80"]
+  tls_listen: [":443"]
+mqtt:
+  listen: [":1883"]
+  tls_listen: [":8883"]
+coap:
+  listen: [":5683"]
+# raw:
+#   listen: {"tcp/9000": ":9000"}  # raw handlers listen on their profile port by default
+
+# Only these clients are served. Leave empty only when binding to an isolated interface.
+enrolled:
+  - {name: plug, ip: 192.168.1.20}
+
+# Router or gateway mode: answer enrolled devices' DNS for profile hostnames with this host.
+# dns:
+#   listen: ":53"
+#   answer_ip: 192.168.1.10
+#   upstream: 1.1.1.1:53
+
+# Home Assistant MQTT discovery on your existing broker.
+# home_assistant:
+#   broker: tcp://homeassistant.local:1883
+#   username: modigliani
+#   password: change-me
+#   discovery_prefix: homeassistant
+#   base_topic: modigliani
+
+# Public keys (base64) whose signatures on library profiles are trusted.
+# The first one signs the profiles in profiles/library (key id 8d0fe4e75b91da4b).
+trusted_keys:
+  - iRaa1UoXv3eL5mnl0ggXX6arGLuIf6Q3vUkjXeNTs1w=
+
+log_level: info

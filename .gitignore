@@ -1,0 +1,32 @@
+# Spec-mandated ignores (never commit build output, captures, CA keys, unscrubbed profiles)
+.venv/
+__pycache__/
+dist/
+build/
+*.egg-info/
+bin/
+captures/
+*.pcap
+*.pcapng
+profiles/local/
+ca/
+# ...but not the Go source package of the same name.
+!server/internal/ca/
+
+# Signing keys (modigliani keygen writes to the user config directory, never the repo)
+*.pem
+*.key
+signing/
+
+# The original build prompt is a local planning document
+modigliani-prompt.md
+
+# Tooling caches
+.mypy_cache/
+.ruff_cache/
+.pytest_cache/
+.coverage
+htmlcov/
+*.spec.bak
+server/coverage.out
+.modigliani/

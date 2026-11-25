@@ -1,0 +1,12 @@
+{
+  "domain": "modigliani",
+  "name": "Modigliani",
+  "codeowners": ["@ide-bloom"],
+  "config_flow": true,
+  "documentation": "https://github.com/ide-bloom/modigliani/blob/main/docs/home-assistant.md",
+  "integration_type": "hub",
+  "iot_class": "local_polling",
+  "issue_tracker": "https://github.com/ide-bloom/modigliani/issues",
+  "requirements": [],
+  "version": "0.1.0"
+}

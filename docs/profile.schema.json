@@ -1,0 +1,2151 @@
+{
+  "$defs": {
+    "AuthConfig": {
+      "additionalProperties": false,
+      "properties": {
+        "token": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/TokenSpec"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "mqtt": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/MqttAuth"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "notes": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Notes",
+          "type": "array"
+        }
+      },
+      "title": "AuthConfig",
+      "type": "object"
+    },
+    "CaptureRef": {
+      "additionalProperties": false,
+      "properties": {
+        "name": {
+          "title": "Name",
+          "type": "string"
+        },
+        "sha256": {
+          "title": "Sha256",
+          "type": "string"
+        },
+        "mode": {
+          "title": "Mode",
+          "type": "string"
+        }
+      },
+      "required": [
+        "name",
+        "sha256",
+        "mode"
+      ],
+      "title": "CaptureRef",
+      "type": "object"
+    },
+    "Checksum": {
+      "additionalProperties": false,
+      "properties": {
+        "algorithm": {
+          "enum": [
+            "sum8",
+            "xor8",
+            "crc8",
+            "sum16",
+            "crc16_ccitt",
+            "crc16_modbus",
+            "crc32"
+          ],
+          "title": "Algorithm",
+          "type": "string"
+        },
+        "offset": {
+          "description": "Position of the checksum; negative counts from the end",
+          "title": "Offset",
+          "type": "integer"
+        },
+        "start": {
+          "default": 0,
+          "title": "Start",
+          "type": "integer"
+        },
+        "end": {
+          "default": 0,
+          "description": "Exclusive end of covered bytes; <=0 counts from the end",
+          "title": "End",
+          "type": "integer"
+        },
+        "endian": {
+          "default": "big",
+          "enum": [
+            "big",
+            "little"
+          ],
+          "title": "Endian",
+          "type": "string"
+        }
+      },
+      "required": [
+        "algorithm",
+        "offset"
+      ],
+      "title": "Checksum",
+      "type": "object"
+    },
+    "CoapHandler": {
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "title": "Id",
+          "type": "string"
+        },
+        "method": {
+          "title": "Method",
+          "type": "string"
+        },
+        "path": {
+          "title": "Path",
+          "type": "string"
+        },
+        "identity": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Identity"
+        },
+        "request_frame": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Request Frame"
+        },
+        "extract": {
+          "items": {
+            "$ref": "#/$defs/Extract"
+          },
+          "title": "Extract",
+          "type": "array"
+        },
+        "response": {
+          "$ref": "#/$defs/CoapResponseSpec"
+        },
+        "housekeeping": {
+          "anyOf": [
+            {
+              "enum": [
+                "time_sync",
+                "firmware_check"
+              ],
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Housekeeping"
+        },
+        "polling_interval_s": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Polling Interval S"
+        },
+        "evidence": {
+          "items": {
+            "$ref": "#/$defs/Evidence"
+          },
+          "title": "Evidence",
+          "type": "array"
+        }
+      },
+      "required": [
+        "id",
+        "method",
+        "path"
+      ],
+      "title": "CoapHandler",
+      "type": "object"
+    },
+    "CoapResponseSpec": {
+      "additionalProperties": false,
+      "properties": {
+        "code": {
+          "default": "2.05",
+          "title": "Code",
+          "type": "string"
+        },
+        "content_format": {
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Content Format"
+        },
+        "payload_type": {
+          "default": "empty",
+          "enum": [
+            "empty",
+            "json",
+            "text",
+            "frame"
+          ],
+          "title": "Payload Type",
+          "type": "string"
+        },
+        "payload": {
+          "$ref": "#/$defs/JsonValue",
+          "default": null
+        },
+        "frame": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/FramePayload"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        }
+      },
+      "title": "CoapResponseSpec",
+      "type": "object"
+    },
+    "Command": {
+      "additionalProperties": false,
+      "properties": {
+        "name": {
+          "title": "Name",
+          "type": "string"
+        },
+        "variable": {
+          "title": "Variable",
+          "type": "string"
+        },
+        "transport": {
+          "enum": [
+            "http_poll",
+            "mqtt",
+            "coap_response",
+            "websocket",
+            "raw"
+          ],
+          "title": "Transport",
+          "type": "string"
+        },
+        "handler": {
+          "description": "id of the HTTP handler, MQTT topic, CoAP/WS/raw handler",
+          "title": "Handler",
+          "type": "string"
+        },
+        "template": {
+          "$ref": "#/$defs/JsonValue",
+          "default": null,
+          "description": "Item/payload template; uses cmd.*"
+        },
+        "value_map": {
+          "anyOf": [
+            {
+              "additionalProperties": {
+                "$ref": "#/$defs/JsonValue"
+              },
+              "type": "object"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "State value (as JSON text) -> device value",
+          "title": "Value Map"
+        },
+        "scale": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "device value = state value / scale",
+          "title": "Scale"
+        },
+        "evidence": {
+          "items": {
+            "$ref": "#/$defs/Evidence"
+          },
+          "title": "Evidence",
+          "type": "array"
+        }
+      },
+      "required": [
+        "name",
+        "variable",
+        "transport",
+        "handler"
+      ],
+      "title": "Command",
+      "type": "object"
+    },
+    "CommandDelivery": {
+      "additionalProperties": false,
+      "description": "How pending commands are embedded into a polled response.",
+      "properties": {
+        "mode": {
+          "default": "list",
+          "enum": [
+            "list",
+            "replace"
+          ],
+          "title": "Mode",
+          "type": "string"
+        },
+        "path": {
+          "description": "Dotted path in the response body; '' for the whole body",
+          "title": "Path",
+          "type": "string"
+        }
+      },
+      "required": [
+        "path"
+      ],
+      "title": "CommandDelivery",
+      "type": "object"
+    },
+    "Defaults": {
+      "additionalProperties": false,
+      "properties": {
+        "http": {
+          "$ref": "#/$defs/HttpResponseSpec"
+        },
+        "coap_code": {
+          "default": "2.05",
+          "title": "Coap Code",
+          "type": "string"
+        }
+      },
+      "title": "Defaults",
+      "type": "object"
+    },
+    "DeviceInfo": {
+      "additionalProperties": false,
+      "properties": {
+        "vendor": {
+          "default": "unknown",
+          "title": "Vendor",
+          "type": "string"
+        },
+        "model": {
+          "default": "unknown",
+          "title": "Model",
+          "type": "string"
+        },
+        "description": {
+          "default": "",
+          "title": "Description",
+          "type": "string"
+        },
+        "fingerprints": {
+          "items": {
+            "$ref": "#/$defs/Fingerprint"
+          },
+          "title": "Fingerprints",
+          "type": "array"
+        }
+      },
+      "title": "DeviceInfo",
+      "type": "object"
+    },
+    "DnsConfig": {
+      "additionalProperties": false,
+      "properties": {
+        "names": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Names",
+          "type": "array"
+        },
+        "ttl": {
+          "default": 60,
+          "title": "Ttl",
+          "type": "integer"
+        }
+      },
+      "title": "DnsConfig",
+      "type": "object"
+    },
+    "Evidence": {
+      "additionalProperties": false,
+      "properties": {
+        "capture": {
+          "title": "Capture",
+          "type": "string"
+        },
+        "flow": {
+          "title": "Flow",
+          "type": "integer"
+        },
+        "message": {
+          "title": "Message",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "capture",
+        "flow",
+        "message"
+      ],
+      "title": "Evidence",
+      "type": "object"
+    },
+    "Extract": {
+      "additionalProperties": false,
+      "description": "Copy a value from an incoming message into a reported state variable.",
+      "properties": {
+        "source": {
+          "description": "Expression such as req.body.power or req.fields.temp",
+          "title": "Source",
+          "type": "string"
+        },
+        "variable": {
+          "title": "Variable",
+          "type": "string"
+        },
+        "scale": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Scale"
+        },
+        "value_map": {
+          "anyOf": [
+            {
+              "additionalProperties": {
+                "$ref": "#/$defs/JsonValue"
+              },
+              "type": "object"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Device value (as JSON text) -> state value",
+          "title": "Value Map"
+        }
+      },
+      "required": [
+        "source",
+        "variable"
+      ],
+      "title": "Extract",
+      "type": "object"
+    },
+    "Fingerprint": {
+      "additionalProperties": false,
+      "properties": {
+        "kind": {
+          "enum": [
+            "sni",
+            "dns_name",
+            "http_user_agent",
+            "mqtt_client_id",
+            "coap_path",
+            "port"
+          ],
+          "title": "Kind",
+          "type": "string"
+        },
+        "pattern": {
+          "description": "Regular expression (RE2-compatible)",
+          "title": "Pattern",
+          "type": "string"
+        },
+        "evidence": {
+          "items": {
+            "$ref": "#/$defs/Evidence"
+          },
+          "title": "Evidence",
+          "type": "array"
+        }
+      },
+      "required": [
+        "kind",
+        "pattern"
+      ],
+      "title": "Fingerprint",
+      "type": "object"
+    },
+    "Frame": {
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "title": "Id",
+          "type": "string"
+        },
+        "length": {
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Length"
+        },
+        "fields": {
+          "items": {
+            "$ref": "#/$defs/FrameField"
+          },
+          "title": "Fields",
+          "type": "array"
+        },
+        "length_field": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/LengthField"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "checksum": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Checksum"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "evidence": {
+          "items": {
+            "$ref": "#/$defs/Evidence"
+          },
+          "title": "Evidence",
+          "type": "array"
+        }
+      },
+      "required": [
+        "id"
+      ],
+      "title": "Frame",
+      "type": "object"
+    },
+    "FrameField": {
+      "additionalProperties": false,
+      "properties": {
+        "name": {
+          "title": "Name",
+          "type": "string"
+        },
+        "offset": {
+          "title": "Offset",
+          "type": "integer"
+        },
+        "type": {
+          "enum": [
+            "u8",
+            "i8",
+            "u16be",
+            "u16le",
+            "i16be",
+            "i16le",
+            "u32be",
+            "u32le",
+            "i32be",
+            "i32le"
+          ],
+          "title": "Type",
+          "type": "string"
+        },
+        "scale": {
+          "default": 1.0,
+          "title": "Scale",
+          "type": "number"
+        },
+        "const": {
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Const"
+        }
+      },
+      "required": [
+        "name",
+        "offset",
+        "type"
+      ],
+      "title": "FrameField",
+      "type": "object"
+    },
+    "FramePayload": {
+      "additionalProperties": false,
+      "properties": {
+        "frame": {
+          "title": "Frame",
+          "type": "string"
+        },
+        "values": {
+          "additionalProperties": {
+            "$ref": "#/$defs/JsonValue"
+          },
+          "description": "field -> template",
+          "title": "Values",
+          "type": "object"
+        }
+      },
+      "required": [
+        "frame"
+      ],
+      "title": "FramePayload",
+      "type": "object"
+    },
+    "Framing": {
+      "additionalProperties": false,
+      "properties": {
+        "kind": {
+          "enum": [
+            "datagram",
+            "length_prefixed",
+            "delimiter",
+            "fixed"
+          ],
+          "title": "Kind",
+          "type": "string"
+        },
+        "delimiter": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "hex bytes",
+          "title": "Delimiter"
+        },
+        "length_field": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/LengthField"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "record_size": {
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Record Size"
+        }
+      },
+      "required": [
+        "kind"
+      ],
+      "title": "Framing",
+      "type": "object"
+    },
+    "HaEntity": {
+      "additionalProperties": false,
+      "properties": {
+        "platform": {
+          "enum": [
+            "climate",
+            "switch",
+            "light",
+            "sensor",
+            "binary_sensor",
+            "select",
+            "number"
+          ],
+          "title": "Platform",
+          "type": "string"
+        },
+        "key": {
+          "title": "Key",
+          "type": "string"
+        },
+        "name": {
+          "title": "Name",
+          "type": "string"
+        },
+        "variable": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Variable"
+        },
+        "unit": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Unit"
+        },
+        "device_class": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Device Class"
+        },
+        "state_class": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "State Class"
+        },
+        "min": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Min"
+        },
+        "max": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Max"
+        },
+        "step": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Step"
+        },
+        "options": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Options",
+          "type": "array"
+        },
+        "current_temperature": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Current Temperature"
+        },
+        "target_temperature": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Target Temperature"
+        },
+        "hvac_mode": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Hvac Mode"
+        },
+        "hvac_mode_map": {
+          "additionalProperties": {
+            "type": "string"
+          },
+          "description": "device value -> HA mode",
+          "title": "Hvac Mode Map",
+          "type": "object"
+        },
+        "hvac_action": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Hvac Action"
+        }
+      },
+      "required": [
+        "platform",
+        "key",
+        "name"
+      ],
+      "title": "HaEntity",
+      "type": "object"
+    },
+    "Handlers": {
+      "additionalProperties": false,
+      "properties": {
+        "http": {
+          "items": {
+            "$ref": "#/$defs/HttpHandler"
+          },
+          "title": "Http",
+          "type": "array"
+        },
+        "websocket": {
+          "items": {
+            "$ref": "#/$defs/WebSocketHandler"
+          },
+          "title": "Websocket",
+          "type": "array"
+        },
+        "mqtt": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/MqttConfig"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "coap": {
+          "items": {
+            "$ref": "#/$defs/CoapHandler"
+          },
+          "title": "Coap",
+          "type": "array"
+        },
+        "raw": {
+          "items": {
+            "$ref": "#/$defs/RawHandler"
+          },
+          "title": "Raw",
+          "type": "array"
+        }
+      },
+      "title": "Handlers",
+      "type": "object"
+    },
+    "HomeAssistant": {
+      "additionalProperties": false,
+      "properties": {
+        "entities": {
+          "items": {
+            "$ref": "#/$defs/HaEntity"
+          },
+          "title": "Entities",
+          "type": "array"
+        }
+      },
+      "title": "HomeAssistant",
+      "type": "object"
+    },
+    "HostReport": {
+      "additionalProperties": false,
+      "properties": {
+        "host": {
+          "title": "Host",
+          "type": "string"
+        },
+        "port": {
+          "title": "Port",
+          "type": "integer"
+        },
+        "tls_outcome": {
+          "title": "Tls Outcome",
+          "type": "string"
+        },
+        "flows": {
+          "title": "Flows",
+          "type": "integer"
+        },
+        "bytes_up": {
+          "title": "Bytes Up",
+          "type": "integer"
+        },
+        "bytes_down": {
+          "title": "Bytes Down",
+          "type": "integer"
+        },
+        "first_seen": {
+          "title": "First Seen",
+          "type": "number"
+        },
+        "last_seen": {
+          "title": "Last Seen",
+          "type": "number"
+        },
+        "mean_interval_s": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Mean Interval S"
+        }
+      },
+      "required": [
+        "host",
+        "port",
+        "tls_outcome",
+        "flows",
+        "bytes_up",
+        "bytes_down",
+        "first_seen",
+        "last_seen"
+      ],
+      "title": "HostReport",
+      "type": "object"
+    },
+    "Housekeeping": {
+      "additionalProperties": false,
+      "properties": {
+        "time_source": {
+          "default": "system",
+          "enum": [
+            "system",
+            "offset"
+          ],
+          "title": "Time Source",
+          "type": "string"
+        },
+        "time_offset_s": {
+          "default": 0.0,
+          "title": "Time Offset S",
+          "type": "number"
+        },
+        "firmware": {
+          "const": "no_update",
+          "default": "no_update",
+          "title": "Firmware",
+          "type": "string"
+        }
+      },
+      "title": "Housekeeping",
+      "type": "object"
+    },
+    "HttpHandler": {
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "title": "Id",
+          "type": "string"
+        },
+        "host": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Host"
+        },
+        "method": {
+          "title": "Method",
+          "type": "string"
+        },
+        "path": {
+          "description": "Path template; {name} segments are parameters",
+          "title": "Path",
+          "type": "string"
+        },
+        "identity": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Expression giving the device key",
+          "title": "Identity"
+        },
+        "auth": {
+          "default": "none",
+          "enum": [
+            "none",
+            "issue_token",
+            "token"
+          ],
+          "title": "Auth",
+          "type": "string"
+        },
+        "extract": {
+          "items": {
+            "$ref": "#/$defs/Extract"
+          },
+          "title": "Extract",
+          "type": "array"
+        },
+        "request_schema": {
+          "anyOf": [
+            {
+              "additionalProperties": {
+                "$ref": "#/$defs/JsonValue"
+              },
+              "type": "object"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Request Schema"
+        },
+        "response": {
+          "$ref": "#/$defs/HttpResponseSpec"
+        },
+        "delivers_commands": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/CommandDelivery"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "housekeeping": {
+          "anyOf": [
+            {
+              "enum": [
+                "time_sync",
+                "firmware_check"
+              ],
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Housekeeping"
+        },
+        "polling_interval_s": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Polling Interval S"
+        },
+        "evidence": {
+          "items": {
+            "$ref": "#/$defs/Evidence"
+          },
+          "title": "Evidence",
+          "type": "array"
+        }
+      },
+      "required": [
+        "id",
+        "method",
+        "path"
+      ],
+      "title": "HttpHandler",
+      "type": "object"
+    },
+    "HttpResponseSpec": {
+      "additionalProperties": false,
+      "properties": {
+        "status": {
+          "default": 200,
+          "title": "Status",
+          "type": "integer"
+        },
+        "headers": {
+          "additionalProperties": {
+            "type": "string"
+          },
+          "title": "Headers",
+          "type": "object"
+        },
+        "body_type": {
+          "default": "json",
+          "enum": [
+            "json",
+            "form",
+            "text",
+            "empty"
+          ],
+          "title": "Body Type",
+          "type": "string"
+        },
+        "body": {
+          "$ref": "#/$defs/JsonValue",
+          "default": null
+        }
+      },
+      "title": "HttpResponseSpec",
+      "type": "object"
+    },
+    "JsonValue": {},
+    "LengthField": {
+      "additionalProperties": false,
+      "properties": {
+        "offset": {
+          "title": "Offset",
+          "type": "integer"
+        },
+        "type": {
+          "enum": [
+            "u8",
+            "u16be",
+            "u16le",
+            "u32be",
+            "u32le"
+          ],
+          "title": "Type",
+          "type": "string"
+        },
+        "adjust": {
+          "description": "frame length = field value + adjust",
+          "title": "Adjust",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "offset",
+        "type",
+        "adjust"
+      ],
+      "title": "LengthField",
+      "type": "object"
+    },
+    "MqttAuth": {
+      "additionalProperties": false,
+      "properties": {
+        "client_id_pattern": {
+          "default": "",
+          "title": "Client Id Pattern",
+          "type": "string"
+        },
+        "username_pattern": {
+          "default": "",
+          "title": "Username Pattern",
+          "type": "string"
+        },
+        "password": {
+          "const": "accept_any",
+          "default": "accept_any",
+          "title": "Password",
+          "type": "string"
+        }
+      },
+      "title": "MqttAuth",
+      "type": "object"
+    },
+    "MqttConfig": {
+      "additionalProperties": false,
+      "properties": {
+        "hosts": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Hosts",
+          "type": "array"
+        },
+        "ports": {
+          "items": {
+            "type": "integer"
+          },
+          "title": "Ports",
+          "type": "array"
+        },
+        "tls": {
+          "default": false,
+          "title": "Tls",
+          "type": "boolean"
+        },
+        "protocol_levels": {
+          "items": {
+            "type": "integer"
+          },
+          "title": "Protocol Levels",
+          "type": "array"
+        },
+        "keepalive_s": {
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Keepalive S"
+        },
+        "identity_var": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Identity Var"
+        },
+        "topics": {
+          "items": {
+            "$ref": "#/$defs/MqttTopic"
+          },
+          "title": "Topics",
+          "type": "array"
+        },
+        "evidence": {
+          "items": {
+            "$ref": "#/$defs/Evidence"
+          },
+          "title": "Evidence",
+          "type": "array"
+        }
+      },
+      "title": "MqttConfig",
+      "type": "object"
+    },
+    "MqttTopic": {
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "title": "Id",
+          "type": "string"
+        },
+        "topic": {
+          "description": "Topic template; {name} segments are variables",
+          "title": "Topic",
+          "type": "string"
+        },
+        "direction": {
+          "enum": [
+            "device_to_cloud",
+            "cloud_to_device"
+          ],
+          "title": "Direction",
+          "type": "string"
+        },
+        "qos": {
+          "default": 0,
+          "title": "Qos",
+          "type": "integer"
+        },
+        "retain": {
+          "default": false,
+          "title": "Retain",
+          "type": "boolean"
+        },
+        "payload_type": {
+          "default": "json",
+          "enum": [
+            "json",
+            "text",
+            "binary"
+          ],
+          "title": "Payload Type",
+          "type": "string"
+        },
+        "payload_schema": {
+          "anyOf": [
+            {
+              "additionalProperties": {
+                "$ref": "#/$defs/JsonValue"
+              },
+              "type": "object"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Payload Schema"
+        },
+        "extract": {
+          "items": {
+            "$ref": "#/$defs/Extract"
+          },
+          "title": "Extract",
+          "type": "array"
+        },
+        "reply_to": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Reply To"
+        },
+        "payload": {
+          "$ref": "#/$defs/JsonValue",
+          "default": null
+        },
+        "housekeeping": {
+          "anyOf": [
+            {
+              "enum": [
+                "time_sync",
+                "firmware_check"
+              ],
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Housekeeping"
+        },
+        "evidence": {
+          "items": {
+            "$ref": "#/$defs/Evidence"
+          },
+          "title": "Evidence",
+          "type": "array"
+        }
+      },
+      "required": [
+        "id",
+        "topic",
+        "direction"
+      ],
+      "title": "MqttTopic",
+      "type": "object"
+    },
+    "Placeholder": {
+      "additionalProperties": false,
+      "properties": {
+        "kind": {
+          "enum": [
+            "device_id",
+            "serial",
+            "mac",
+            "account",
+            "token",
+            "key",
+            "ssid",
+            "ip",
+            "secret",
+            "other"
+          ],
+          "title": "Kind",
+          "type": "string"
+        },
+        "description": {
+          "default": "",
+          "title": "Description",
+          "type": "string"
+        },
+        "value": {
+          "$ref": "#/$defs/JsonValue",
+          "default": null
+        },
+        "source": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/PlaceholderSource"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        }
+      },
+      "required": [
+        "kind"
+      ],
+      "title": "Placeholder",
+      "type": "object"
+    },
+    "PlaceholderSource": {
+      "additionalProperties": false,
+      "description": "Where `modigliani install` finds this value in the user's own capture.",
+      "properties": {
+        "kind": {
+          "enum": [
+            "http_path",
+            "http_body",
+            "http_header",
+            "mqtt_client_id",
+            "mqtt_username",
+            "mqtt_topic",
+            "coap_path"
+          ],
+          "title": "Kind",
+          "type": "string"
+        },
+        "handler": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Handler"
+        },
+        "selector": {
+          "default": "",
+          "title": "Selector",
+          "type": "string"
+        },
+        "pattern": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Pattern"
+        }
+      },
+      "required": [
+        "kind"
+      ],
+      "title": "PlaceholderSource",
+      "type": "object"
+    },
+    "Provenance": {
+      "additionalProperties": false,
+      "properties": {
+        "generated_by": {
+          "title": "Generated By",
+          "type": "string"
+        },
+        "created": {
+          "title": "Created",
+          "type": "string"
+        },
+        "captures": {
+          "items": {
+            "$ref": "#/$defs/CaptureRef"
+          },
+          "title": "Captures",
+          "type": "array"
+        },
+        "author": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Author"
+        },
+        "license": {
+          "anyOf": [
+            {
+              "enum": [
+                "CC0-1.0",
+                "CC-BY-4.0"
+              ],
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "License"
+        },
+        "scrubbed": {
+          "default": false,
+          "title": "Scrubbed",
+          "type": "boolean"
+        },
+        "notes": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Notes",
+          "type": "array"
+        }
+      },
+      "required": [
+        "generated_by",
+        "created"
+      ],
+      "title": "Provenance",
+      "type": "object"
+    },
+    "RawHandler": {
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "title": "Id",
+          "type": "string"
+        },
+        "transport": {
+          "enum": [
+            "tcp",
+            "udp"
+          ],
+          "title": "Transport",
+          "type": "string"
+        },
+        "port": {
+          "title": "Port",
+          "type": "integer"
+        },
+        "host": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Host"
+        },
+        "framing": {
+          "$ref": "#/$defs/Framing"
+        },
+        "identity": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Identity"
+        },
+        "rules": {
+          "items": {
+            "$ref": "#/$defs/RawRule"
+          },
+          "title": "Rules",
+          "type": "array"
+        },
+        "evidence": {
+          "items": {
+            "$ref": "#/$defs/Evidence"
+          },
+          "title": "Evidence",
+          "type": "array"
+        }
+      },
+      "required": [
+        "id",
+        "transport",
+        "port",
+        "framing"
+      ],
+      "title": "RawHandler",
+      "type": "object"
+    },
+    "RawRule": {
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "title": "Id",
+          "type": "string"
+        },
+        "match": {
+          "additionalProperties": {
+            "type": "integer"
+          },
+          "description": "frame field -> required value",
+          "title": "Match",
+          "type": "object"
+        },
+        "frame": {
+          "title": "Frame",
+          "type": "string"
+        },
+        "extract": {
+          "items": {
+            "$ref": "#/$defs/Extract"
+          },
+          "title": "Extract",
+          "type": "array"
+        },
+        "reply": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/FramePayload"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "evidence": {
+          "items": {
+            "$ref": "#/$defs/Evidence"
+          },
+          "title": "Evidence",
+          "type": "array"
+        }
+      },
+      "required": [
+        "id",
+        "frame"
+      ],
+      "title": "RawRule",
+      "type": "object"
+    },
+    "Revivability": {
+      "additionalProperties": false,
+      "properties": {
+        "status": {
+          "enum": [
+            "revivable",
+            "partial",
+            "not_revivable_without_firmware_access"
+          ],
+          "title": "Status",
+          "type": "string"
+        },
+        "reasons": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Reasons",
+          "type": "array"
+        },
+        "hosts": {
+          "items": {
+            "$ref": "#/$defs/HostReport"
+          },
+          "title": "Hosts",
+          "type": "array"
+        }
+      },
+      "required": [
+        "status"
+      ],
+      "title": "Revivability",
+      "type": "object"
+    },
+    "StateVariable": {
+      "additionalProperties": false,
+      "properties": {
+        "name": {
+          "title": "Name",
+          "type": "string"
+        },
+        "type": {
+          "enum": [
+            "bool",
+            "int",
+            "float",
+            "enum",
+            "string"
+          ],
+          "title": "Type",
+          "type": "string"
+        },
+        "unit": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Unit"
+        },
+        "min": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Min"
+        },
+        "max": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Max"
+        },
+        "step": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Step"
+        },
+        "options": {
+          "items": {
+            "$ref": "#/$defs/JsonValue"
+          },
+          "title": "Options",
+          "type": "array"
+        },
+        "writable": {
+          "default": false,
+          "title": "Writable",
+          "type": "boolean"
+        },
+        "description": {
+          "default": "",
+          "title": "Description",
+          "type": "string"
+        },
+        "evidence": {
+          "items": {
+            "$ref": "#/$defs/Evidence"
+          },
+          "title": "Evidence",
+          "type": "array"
+        }
+      },
+      "required": [
+        "name",
+        "type"
+      ],
+      "title": "StateVariable",
+      "type": "object"
+    },
+    "TlsConfig": {
+      "additionalProperties": false,
+      "properties": {
+        "mode": {
+          "default": "none",
+          "enum": [
+            "none",
+            "local_ca",
+            "strict_verification",
+            "mixed"
+          ],
+          "title": "Mode",
+          "type": "string"
+        },
+        "hostnames": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Hostnames",
+          "type": "array"
+        }
+      },
+      "title": "TlsConfig",
+      "type": "object"
+    },
+    "TokenSpec": {
+      "additionalProperties": false,
+      "properties": {
+        "format": {
+          "enum": [
+            "hex",
+            "base64url",
+            "uuid",
+            "jwt",
+            "alnum",
+            "numeric"
+          ],
+          "title": "Format",
+          "type": "string"
+        },
+        "length": {
+          "default": 32,
+          "title": "Length",
+          "type": "integer"
+        },
+        "prefix": {
+          "default": "",
+          "title": "Prefix",
+          "type": "string"
+        },
+        "lifetime_s": {
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Lifetime S"
+        },
+        "location": {
+          "default": "bearer",
+          "enum": [
+            "bearer",
+            "header",
+            "query",
+            "body"
+          ],
+          "title": "Location",
+          "type": "string"
+        },
+        "name": {
+          "default": "Authorization",
+          "title": "Name",
+          "type": "string"
+        },
+        "issued_by": {
+          "description": "id of the HTTP handler that issues tokens",
+          "title": "Issued By",
+          "type": "string"
+        },
+        "evidence": {
+          "items": {
+            "$ref": "#/$defs/Evidence"
+          },
+          "title": "Evidence",
+          "type": "array"
+        }
+      },
+      "required": [
+        "format",
+        "issued_by"
+      ],
+      "title": "TokenSpec",
+      "type": "object"
+    },
+    "WebSocketHandler": {
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "title": "Id",
+          "type": "string"
+        },
+        "host": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Host"
+        },
+        "path": {
+          "title": "Path",
+          "type": "string"
+        },
+        "identity": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Identity"
+        },
+        "messages": {
+          "items": {
+            "$ref": "#/$defs/WsMessageRule"
+          },
+          "title": "Messages",
+          "type": "array"
+        },
+        "evidence": {
+          "items": {
+            "$ref": "#/$defs/Evidence"
+          },
+          "title": "Evidence",
+          "type": "array"
+        }
+      },
+      "required": [
+        "id",
+        "path"
+      ],
+      "title": "WebSocketHandler",
+      "type": "object"
+    },
+    "WsMessageRule": {
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "title": "Id",
+          "type": "string"
+        },
+        "match": {
+          "additionalProperties": {
+            "$ref": "#/$defs/JsonValue"
+          },
+          "title": "Match",
+          "type": "object"
+        },
+        "extract": {
+          "items": {
+            "$ref": "#/$defs/Extract"
+          },
+          "title": "Extract",
+          "type": "array"
+        },
+        "reply": {
+          "$ref": "#/$defs/JsonValue",
+          "default": null
+        },
+        "evidence": {
+          "items": {
+            "$ref": "#/$defs/Evidence"
+          },
+          "title": "Evidence",
+          "type": "array"
+        }
+      },
+      "required": [
+        "id"
+      ],
+      "title": "WsMessageRule",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": {
+      "const": 1,
+      "default": 1,
+      "title": "Schema Version",
+      "type": "integer"
+    },
+    "id": {
+      "pattern": "^[a-z0-9][a-z0-9._-]*$",
+      "title": "Id",
+      "type": "string"
+    },
+    "name": {
+      "title": "Name",
+      "type": "string"
+    },
+    "device": {
+      "$ref": "#/$defs/DeviceInfo"
+    },
+    "revivability": {
+      "$ref": "#/$defs/Revivability"
+    },
+    "dns": {
+      "$ref": "#/$defs/DnsConfig"
+    },
+    "tls": {
+      "$ref": "#/$defs/TlsConfig"
+    },
+    "placeholders": {
+      "additionalProperties": {
+        "$ref": "#/$defs/Placeholder"
+      },
+      "title": "Placeholders",
+      "type": "object"
+    },
+    "auth": {
+      "$ref": "#/$defs/AuthConfig"
+    },
+    "state": {
+      "items": {
+        "$ref": "#/$defs/StateVariable"
+      },
+      "title": "State",
+      "type": "array"
+    },
+    "commands": {
+      "items": {
+        "$ref": "#/$defs/Command"
+      },
+      "title": "Commands",
+      "type": "array"
+    },
+    "frames": {
+      "items": {
+        "$ref": "#/$defs/Frame"
+      },
+      "title": "Frames",
+      "type": "array"
+    },
+    "handlers": {
+      "$ref": "#/$defs/Handlers"
+    },
+    "housekeeping": {
+      "$ref": "#/$defs/Housekeeping"
+    },
+    "defaults": {
+      "$ref": "#/$defs/Defaults"
+    },
+    "home_assistant": {
+      "$ref": "#/$defs/HomeAssistant"
+    },
+    "provenance": {
+      "$ref": "#/$defs/Provenance"
+    }
+  },
+  "required": [
+    "id",
+    "name",
+    "revivability",
+    "provenance"
+  ],
+  "title": "Profile",
+  "type": "object",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/ide-bloom/modigliani/docs/profile.schema.json"
+}

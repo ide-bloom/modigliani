@@ -1,0 +1,105 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  studio:
+    name: Studio (${{ matrix.os }}, Python ${{ matrix.python }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+        python: ["3.12", "3.14"]
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: astral-sh/setup-uv@1db35dd8eee11c5894872e0b383ae6c406cf738d # v10.4.0
+        with:
+          enable-cache: true
+          python-version: ${{ matrix.python }}
+      - run: uv sync --locked
+      - run: uv run ruff check studio/src tests scripts homeassistant
+      - run: uv run ruff format --check studio/src tests scripts homeassistant
+      - run: uv run mypy
+      - run: uv run pytest tests/unit
+      - run: uv run pip-audit --skip-editable
+
+  server:
+    name: Server (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+    defaults:
+      run:
+        working-directory: server
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-go@d8cbb8045d7f43706b9177cceb36c1f91a6644d5 # v7.1.0
+        with:
+          go-version-file: server/go.mod
+          cache-dependency-path: server/go.sum
+      - run: go vet ./...
+      - name: go test -race
+        env:
+          # The race detector needs cgo; both hosted runners ship a C compiler.
+          CGO_ENABLED: "1"
+        run: go test -race ./...
+      - run: go run golang.org/x/vuln/cmd/govulncheck@latest ./...
+      - uses: golangci/golangci-lint-action@ba0d7d2ec06a0ea1cb5fa41b2e4a3ab91d21278a # v9.3.0
+        with:
+          version: v2.15.0
+          working-directory: server
+
+  homeassistant:
+    # Home Assistant does not run on Windows (it needs POSIX-only modules), so its test
+    # harness runs on Linux only.
+    name: Home Assistant integration
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: homeassistant
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: astral-sh/setup-uv@1db35dd8eee11c5894872e0b383ae6c406cf738d # v10.4.0
+        with:
+          python-version: "3.14"
+      - run: uv venv .venv
+      - run: uv pip install --python .venv -r requirements_test.txt
+      - run: .venv/bin/python -m pytest
+
+  e2e:
+    name: End to end (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-go@d8cbb8045d7f43706b9177cceb36c1f91a6644d5 # v7.1.0
+        with:
+          go-version-file: server/go.mod
+          cache-dependency-path: server/go.sum
+      - uses: astral-sh/setup-uv@1db35dd8eee11c5894872e0b383ae6c406cf738d # v10.4.0
+        with:
+          enable-cache: true
+          python-version: "3.12"
+      - run: uv sync --locked
+      - name: Build the server outside the repository
+        shell: bash
+        run: |
+          exe=modigliani-server; [ "$RUNNER_OS" = Windows ] && exe=modigliani-server.exe
+          (cd server && go build -o "$RUNNER_TEMP/$exe" ./cmd/modigliani-server)
+          echo "MODIGLIANI_SERVER_BIN=$RUNNER_TEMP/$exe" >> "$GITHUB_ENV"
+      - run: uv run pytest tests/e2e -v
