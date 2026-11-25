@@ -9,7 +9,7 @@ require (
 	github.com/mochi-mqtt/server/v2 v2.7.9
 	github.com/plgd-dev/go-coap/v3 v3.9.0
 	go.yaml.in/yaml/v3 v3.0.6
-	golang.org/x/sync v0.24.0
+	golang.org/x/sync v0.25.0
 	golang.org/x/sys v0.50.0
 	modernc.org/sqlite v1.63.0
 )
